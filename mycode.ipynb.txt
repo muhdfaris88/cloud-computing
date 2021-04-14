@@ -1,0 +1,924 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 527,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from pyspark.sql import SparkSession\n",
+    "\n",
+    "from pyspark import SparkContext\n",
+    "import findspark\n",
+    "from pyspark import SparkConf\n",
+    "findspark.init()\n",
+    "import sys\n",
+    "import re\n",
+    "sc = SparkContext()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 528,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Create SparkSession and sparkcontext\n",
+    "\n",
+    "conf = SparkConf()\n",
+    "spark = SparkSession.builder\\\n",
+    "                    .config(conf=conf) \\\n",
+    "                    .master(\"local\")\\\n",
+    "                    .appName('Firstprogram')\\\n",
+    "                    .getOrCreate()\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 529,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Read the input file \n",
+    "text_file = sc.textFile(\"sample-a.txt\")\n",
+    "text_file=text_file.filter(lambda x:x!='')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 530,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "['Apache',\n",
+       " 'Spark',\n",
+       " 'is',\n",
+       " 'an',\n",
+       " 'open-source',\n",
+       " 'distributed',\n",
+       " 'general-purpose',\n",
+       " 'cluster-computing',\n",
+       " 'framework.',\n",
+       " 'Originally',\n",
+       " 'developed',\n",
+       " 'at',\n",
+       " 'the',\n",
+       " 'University',\n",
+       " 'of',\n",
+       " 'California,',\n",
+       " \"Berkeley's\",\n",
+       " 'AMPLab,',\n",
+       " 'the',\n",
+       " 'Spark',\n",
+       " 'codebase',\n",
+       " 'was',\n",
+       " 'later',\n",
+       " 'donated',\n",
+       " 'to',\n",
+       " 'the',\n",
+       " 'Apache',\n",
+       " 'Software',\n",
+       " 'Foundation,',\n",
+       " 'which',\n",
+       " 'has',\n",
+       " 'maintained',\n",
+       " 'it',\n",
+       " 'since.',\n",
+       " 'Spark',\n",
+       " 'provides',\n",
+       " 'an',\n",
+       " 'interface',\n",
+       " 'for',\n",
+       " 'programming',\n",
+       " 'entire',\n",
+       " 'clusters',\n",
+       " 'with',\n",
+       " 'implicit',\n",
+       " 'data',\n",
+       " 'parallelism',\n",
+       " 'and',\n",
+       " 'fault',\n",
+       " 'tolerance.']"
+      ]
+     },
+     "execution_count": 530,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#split all data by words\n",
+    "chrac=text_file.flatMap(lambda line: line.split(\" \"))\n",
+    "chrac.collect()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 531,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#punctuation characters\n",
+    "punc='!\"#$%&\\'()*+,-./:;<=>?@[\\\\]^_`\" \"{|}~123456789'"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 532,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#function to remove punctuation\n",
+    "def lower_clean_str(x):\n",
+    "   \n",
+    "    lowercased_str = x.lower()\n",
+    "    for ch in punc:\n",
+    "        lowercased_str = lowercased_str.replace(ch, '')\n",
+    "    return lowercased_str"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 533,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#applying function and \n",
+    "two_RDD = text_file.map(lower_clean_str)\n",
+    "two_RDD=two_RDD.filter(lambda x: x is not None)\n",
+    "two_RDD=two_RDD.filter(lambda x: x != '')\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 534,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#split all data by character\n",
+    "two_RDD=two_RDD.flatMap(lambda line: line.split(\",\"))\n",
+    "two_RDD=two_RDD.reduce(lambda x, y: x + y)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 535,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "['a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'b', 'b', 'b', 'b', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'g', 'g', 'g', 'g', 'g', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'k', 'k', 'k', 'k', 'k', 'l', 'l', 'l', 'l', 'l', 'l', 'l', 'l', 'l', 'l', 'l', 'l', 'l', 'l', 'l', 'l', 'm', 'm', 'm', 'm', 'm', 'm', 'm', 'm', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 's', 's', 's', 's', 's', 's', 's', 's', 's', 's', 's', 's', 's', 's', 's', 's', 's', 's', 's', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u', 'v', 'v', 'v', 'w', 'w', 'w', 'w', 'w', 'y', 'y', 'y']\n"
+     ]
+    }
+   ],
+   "source": [
+    "# sorting of characters\n",
+    "two_RDD = sorted(two_RDD)\n",
+    "print(two_RDD)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 536,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "317\n"
+     ]
+    }
+   ],
+   "source": [
+    "#total characters in string\n",
+    "total_chr = 0\n",
+    " \n",
+    "for i in two_RDD:\n",
+    "    total_chr = total_chr + 1\n",
+    "\n",
+    "print(total_chr)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 537,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#function to sort by  frequency of characters\n",
+    "def char_frequency(str1):\n",
+    "    dict = {}\n",
+    "    for n in str1:\n",
+    "        keys = dict.keys()\n",
+    "        if n in keys:\n",
+    "            dict[n] += 1\n",
+    "        else:\n",
+    "            dict[n] = 1\n",
+    "   # return dict\n",
+    "    output = \"\"\n",
+    "    newDict =  sorted(dict.items(), key=lambda kv: kv[1],reverse = True)\n",
+    "    for k,v in newDict:\n",
+    "            for i in range(v):\n",
+    "                output += k\n",
+    "    return output"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 538,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaiiiiiiiiiiiiiiiiiiiiiiiiirrrrrrrrrrrrrrrrrrrrrrrrrttttttttttttttttttttttttnnnnnnnnnnnnnnnnnnnooooooooooooooooooosssssssssssssssssssllllllllllllllllpppppppppppppppcccccccccccccddddddddddddhhhhhhhhhuuuuuuuuuffffffffmmmmmmmmgggggkkkkkwwwwwbbbbvvvyyy'"
+      ]
+     },
+     "execution_count": 538,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#appling function\n",
+    "chr_withcount=char_frequency(two_RDD) \n",
+    "chr_withcount\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 539,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "['e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'i', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 's', 's', 's', 's', 's', 's', 's', 's', 's', 's', 's', 's', 's', 's', 's', 's', 's', 's', 's', 'l', 'l', 'l', 'l', 'l', 'l', 'l', 'l', 'l', 'l', 'l', 'l', 'l', 'l', 'l', 'l', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'm', 'm', 'm', 'm', 'm', 'm', 'm', 'm', 'g', 'g', 'g', 'g', 'g', 'k', 'k', 'k', 'k', 'k', 'w', 'w', 'w', 'w', 'w', 'b', 'b', 'b', 'b', 'v', 'v', 'v', 'y', 'y', 'y']\n"
+     ]
+    }
+   ],
+   "source": [
+    "chr_withcount=(Convert(chr_withcount)) \n",
+    "print(chr_withcount)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 540,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "(1, 'e', 36)\n",
+      "(2, 'a', 35)\n",
+      "(3, 'i', 25)\n",
+      "(4, 'r', 25)\n",
+      "(5, 't', 24)\n",
+      "(6, 'n', 19)\n",
+      "(7, 'o', 19)\n",
+      "(8, 's', 19)\n",
+      "(9, 'l', 16)\n",
+      "(10, 'p', 15)\n",
+      "(11, 'c', 13)\n",
+      "(12, 'd', 12)\n",
+      "(13, 'h', 9)\n",
+      "(14, 'u', 9)\n",
+      "(15, 'f', 8)\n",
+      "(16, 'm', 8)\n",
+      "(17, 'g', 5)\n",
+      "(18, 'k', 5)\n",
+      "(19, 'w', 5)\n",
+      "(20, 'b', 4)\n",
+      "(21, 'v', 3)\n",
+      "(22, 'y', 3)\n"
+     ]
+    }
+   ],
+   "source": [
+    "    # frequency of characters  \n",
+    "    freq = {} \n",
+    "   \n",
+    "    for item in chr_withcount: \n",
+    "        if (item in freq): \n",
+    "            freq[item] += 1\n",
+    "        else: \n",
+    "            freq[item] = 1\n",
+    "    count=1\n",
+    "    for key, value in freq.items(): \n",
+    "        chr_out= count,key, value\n",
+    "        count=count+1\n",
+    "        print (chr_out)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 541,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "22\n"
+     ]
+    }
+   ],
+   "source": [
+    "#distinct characters in string\n",
+    "distinct_chr = 0\n",
+    " \n",
+    "for i in freq.items():\n",
+    "    distinct_chr = distinct_chr + 1 \n",
+    "print(distinct_chr)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 542,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# finding populer thresh hold 5%\n",
+    "populer_chr_threshhold=round(distinct_chr * 5 / 100)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 543,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "1"
+      ]
+     },
+     "execution_count": 543,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "populer_chr_threshhold"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 544,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#finding rare_threshold_word\n",
+    "#finding common_threshold_l_word\n",
+    "#finding common_threshold_u_word\n",
+    "rare_chr_threshhold= distinct_chr - populer_chr_threshhold\n",
+    "half_per_chr = round(distinct_chr * 50 / 100)\n",
+    "l_chr = half_per_chr - (round(populer_chr_threshhold/2))\n",
+    "u_chr = half_per_chr + (round(populer_chr_threshhold/2))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 545,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "total number of words= 317\n",
+      "total number of distinct words= 22\n",
+      "popular_threshold_word= 1\n",
+      "common_threshold_l_word= 11\n",
+      "common_threshold_u_word= 11\n",
+      "rare_threshold_word= 21\n"
+     ]
+    }
+   ],
+   "source": [
+    "#print according to given formet\n",
+    "print(\"total number of words=\", total_chr)\n",
+    "print(\"total number of distinct words=\", distinct_chr)\n",
+    "print(\"popular_threshold_word=\", populer_chr_threshhold)\n",
+    "print(\"common_threshold_l_word=\", l_chr)\n",
+    "print(\"common_threshold_u_word=\", u_chr)\n",
+    "print(\"rare_threshold_word=\", rare_chr_threshhold)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 546,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Popular Letters\n",
+      "\n",
+      "count  chr  freq\n",
+      "(2, 'a', 35)\n"
+     ]
+    }
+   ],
+   "source": [
+    "# print Popular Letters\n",
+    "count=1\n",
+    "i=0\n",
+    "j=populer_chr_threshhold\n",
+    "print(\"Popular Letters\\n\")\n",
+    "print(\"count  chr  freq\")\n",
+    "for key, value in freq.items(): \n",
+    "    chr_out= count  ,  key , value\n",
+    "    count=count+1\n",
+    "    if i == j:\n",
+    "        break\n",
+    "    else:    \n",
+    "        i=i+1           \n",
+    "print (chr_out)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 547,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Common Letters\n",
+      "\n",
+      "count  chr  freq\n",
+      "(11, 'c', 13)\n"
+     ]
+    }
+   ],
+   "source": [
+    "    #print Common Letters\n",
+    "    count=1\n",
+    "    i=l_chr\n",
+    "    j=u_chr\n",
+    "    print(\"Common Letters\\n\")\n",
+    "    print(\"count  chr  freq\")\n",
+    "    for key, value in freq.items(): \n",
+    "            chr_out= count  ,  key , value\n",
+    "            count=count+1\n",
+    "            if i == chr_out[0]:\n",
+    "                \n",
+    "                if j  >= chr_out[0]:\n",
+    "                    i=i+1\n",
+    "                    \n",
+    "                    print (chr_out)\n",
+    "                else:\n",
+    "                      continue\n",
+    "            else:   \n",
+    "                \n",
+    "                continue\n",
+    "               "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 548,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Rare Letters\n",
+      "\n",
+      "count  chr  freq\n",
+      "(21, 'v', 3)\n",
+      "(22, 'y', 3)\n"
+     ]
+    }
+   ],
+   "source": [
+    "    #print Rare Letters\n",
+    "    count=1\n",
+    "    i=rare_chr_threshhold\n",
+    "    print(\"Rare Letters\\n\")\n",
+    "    \n",
+    "    print(\"count  chr  freq\")\n",
+    "    for key, value in freq.items(): \n",
+    "            chr_out= count  ,  key , value\n",
+    "            \n",
+    "            count=count+1\n",
+    "            \n",
+    "            \n",
+    "            if i == chr_out[0]:\n",
+    "\n",
+    "                i=i+1\n",
+    "                print (chr_out)\n",
+    "            else:   \n",
+    "                \n",
+    "                continue\n",
+    "               "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 551,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "['Apache',\n",
+       " 'Spark',\n",
+       " 'is',\n",
+       " 'an',\n",
+       " 'open-source',\n",
+       " 'distributed',\n",
+       " 'general-purpose',\n",
+       " 'cluster-computing',\n",
+       " 'framework.',\n",
+       " 'Originally',\n",
+       " 'developed',\n",
+       " 'at',\n",
+       " 'the',\n",
+       " 'University',\n",
+       " 'of',\n",
+       " 'California,',\n",
+       " \"Berkeley's\",\n",
+       " 'AMPLab,',\n",
+       " 'the',\n",
+       " 'Spark',\n",
+       " 'codebase',\n",
+       " 'was',\n",
+       " 'later',\n",
+       " 'donated',\n",
+       " 'to',\n",
+       " 'the',\n",
+       " 'Apache',\n",
+       " 'Software',\n",
+       " 'Foundation,',\n",
+       " 'which',\n",
+       " 'has',\n",
+       " 'maintained',\n",
+       " 'it',\n",
+       " 'since.',\n",
+       " 'Spark',\n",
+       " 'provides',\n",
+       " 'an',\n",
+       " 'interface',\n",
+       " 'for',\n",
+       " 'programming',\n",
+       " 'entire',\n",
+       " 'clusters',\n",
+       " 'with',\n",
+       " 'implicit',\n",
+       " 'data',\n",
+       " 'parallelism',\n",
+       " 'and',\n",
+       " 'fault',\n",
+       " 'tolerance.']"
+      ]
+     },
+     "execution_count": 551,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "one_RDD=chrac.flatMap(lambda line: line.split(\" \"))\n",
+    "one_RDD=one_RDD.filter(lambda x: x is not None)\n",
+    "one_RDD=one_RDD.filter(lambda x: x != '')\n",
+    "one_RDD.collect()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 552,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#finding count by words and spliting them\n",
+    "words=one_RDD.flatMap(lambda line: line.split(\" \")) \\\n",
+    "                            .map(lambda x: ''.join(x)) \\\n",
+    "                            .map(lambda word: (word, 1)) \\\n",
+    "                           .reduceByKey(lambda x, y: x + y) \\\n",
+    "                            .map(lambda x: (x[1], x[0])).sortByKey(False).collect()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 553,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "[(3, 'Spark'),\n",
+       " (3, 'the'),\n",
+       " (2, 'Apache'),\n",
+       " (2, 'an'),\n",
+       " (1, 'is'),\n",
+       " (1, 'open-source'),\n",
+       " (1, 'general-purpose'),\n",
+       " (1, 'cluster-computing'),\n",
+       " (1, 'developed'),\n",
+       " (1, 'at'),\n",
+       " (1, 'University'),\n",
+       " (1, 'of'),\n",
+       " (1, \"Berkeley's\"),\n",
+       " (1, 'AMPLab,'),\n",
+       " (1, 'codebase'),\n",
+       " (1, 'was'),\n",
+       " (1, 'provides'),\n",
+       " (1, 'programming'),\n",
+       " (1, 'entire'),\n",
+       " (1, 'clusters'),\n",
+       " (1, 'implicit'),\n",
+       " (1, 'fault'),\n",
+       " (1, 'distributed'),\n",
+       " (1, 'framework.'),\n",
+       " (1, 'Originally'),\n",
+       " (1, 'California,'),\n",
+       " (1, 'later'),\n",
+       " (1, 'donated'),\n",
+       " (1, 'to'),\n",
+       " (1, 'Software'),\n",
+       " (1, 'Foundation,'),\n",
+       " (1, 'which'),\n",
+       " (1, 'has'),\n",
+       " (1, 'maintained'),\n",
+       " (1, 'it'),\n",
+       " (1, 'since.'),\n",
+       " (1, 'interface'),\n",
+       " (1, 'for'),\n",
+       " (1, 'with'),\n",
+       " (1, 'data'),\n",
+       " (1, 'parallelism'),\n",
+       " (1, 'and'),\n",
+       " (1, 'tolerance.')]"
+      ]
+     },
+     "execution_count": 553,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "words"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 554,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#finding distinct words count\n",
+    "distinct_words = one_RDD.flatMap(lambda line: line.split(\" \")).distinct().count()\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 555,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "(1, 'Spark', 3)\n",
+      "(2, 'the', 3)\n",
+      "(3, 'Apache', 2)\n",
+      "(4, 'an', 2)\n",
+      "(5, 'is', 1)\n",
+      "(6, 'open-source', 1)\n",
+      "(7, 'general-purpose', 1)\n",
+      "(8, 'cluster-computing', 1)\n",
+      "(9, 'developed', 1)\n",
+      "(10, 'at', 1)\n",
+      "(11, 'University', 1)\n",
+      "(12, 'of', 1)\n",
+      "(13, \"Berkeley's\", 1)\n",
+      "(14, 'AMPLab,', 1)\n",
+      "(15, 'codebase', 1)\n",
+      "(16, 'was', 1)\n",
+      "(17, 'provides', 1)\n",
+      "(18, 'programming', 1)\n",
+      "(19, 'entire', 1)\n",
+      "(20, 'clusters', 1)\n",
+      "(21, 'implicit', 1)\n",
+      "(22, 'fault', 1)\n",
+      "(23, 'distributed', 1)\n",
+      "(24, 'framework.', 1)\n",
+      "(25, 'Originally', 1)\n",
+      "(26, 'California,', 1)\n",
+      "(27, 'later', 1)\n",
+      "(28, 'donated', 1)\n",
+      "(29, 'to', 1)\n",
+      "(30, 'Software', 1)\n",
+      "(31, 'Foundation,', 1)\n",
+      "(32, 'which', 1)\n",
+      "(33, 'has', 1)\n",
+      "(34, 'maintained', 1)\n",
+      "(35, 'it', 1)\n",
+      "(36, 'since.', 1)\n",
+      "(37, 'interface', 1)\n",
+      "(38, 'for', 1)\n",
+      "(39, 'with', 1)\n",
+      "(40, 'data', 1)\n",
+      "(41, 'parallelism', 1)\n",
+      "(42, 'and', 1)\n",
+      "(43, 'tolerance.', 1)\n"
+     ]
+    }
+   ],
+   "source": [
+    "#print data with indexing\n",
+    "output = words\n",
+    "Total_count=0\n",
+    "strtoreplace=1\n",
+    "charac=0\n",
+    "i=1\n",
+    "for (word,count) in output:  \n",
+    "    Total_count = Total_count+word\n",
+    "    num=i\n",
+    "    out =  num,count, word\n",
+    "    print(out)\n",
+    "    i=i+1\n",
+    "populer = round(Total_count * 5 / 100)\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 556,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "total number of words= 49\n",
+      "total number of distinct words= 43\n",
+      "popular_threshold_word= 2\n",
+      "common_threshold_l_word= 21\n",
+      "common_threshold_u_word= 23\n",
+      "rare_threshold_word= 41\n"
+     ]
+    }
+   ],
+   "source": [
+    "#print words output bin a given formate\n",
+    "print(\"total number of words=\", Total_count)\n",
+    "print(\"total number of distinct words=\", distinct_words)\n",
+    "print(\"popular_threshold_word=\", populer)\n",
+    "rare= distinct_words - populer\n",
+    "half_per = round(distinct_words * 50 / 100)\n",
+    "l_word = half_per - (round(populer/2))\n",
+    "u_word = half_per + (round(populer/2))\n",
+    "\n",
+    "print(\"common_threshold_l_word=\", l_word)\n",
+    "print(\"common_threshold_u_word=\", u_word)\n",
+    "print(\"rare_threshold_word=\", rare)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 557,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Popular Words \n",
+      "\n",
+      "Rank    freq word \n",
+      "\n",
+      "1       (3, 'Spark')\n",
+      "2       (3, 'the')\n"
+     ]
+    }
+   ],
+   "source": [
+    "#printing Popular Words\n",
+    "a=0\n",
+    "print(\"Popular Words \\n\")\n",
+    "print(\"Rank    freq word \\n\")\n",
+    "for i in range(0,populer):\n",
+    "    a=a+1\n",
+    "    print(a, \"     \", output[i])  \n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 558,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Common Word \n",
+      "\n",
+      "Rank    freq word \n",
+      "\n",
+      "21       (1, 'implicit')\n",
+      "22       (1, 'fault')\n",
+      "23       (1, 'distributed')\n"
+     ]
+    }
+   ],
+   "source": [
+    "#printing Common Word\n",
+    "a=l_word-1\n",
+    "print(\"Common Word \\n\")\n",
+    "print(\"Rank    freq word \\n\")\n",
+    "for i in range(l_word-1,u_word):\n",
+    "    a=a+1\n",
+    "    print(a, \"     \", output[i])  "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 559,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Rare Words \n",
+      "\n",
+      "Rank    freq word \n",
+      "\n",
+      "41       (1, 'and')\n",
+      "42       (1, 'tolerance.')\n"
+     ]
+    }
+   ],
+   "source": [
+    "#printing Rare Words\n",
+    "a=rare-1\n",
+    "print(\"Rare Words \\n\")\n",
+    "print(\"Rank    freq word \\n\")\n",
+    "for i in range(rare,distinct_words):\n",
+    "    a=a+1\n",
+    "    print(a, \"     \", output[i]) "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 560,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Stopping Spark-Session and Spark context\n",
+    "sc.stop()\n",
+    "spark.stop()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.6"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
