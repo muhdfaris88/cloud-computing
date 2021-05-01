@@ -1,4 +1,9 @@
 In this Repository there are 3 files. 
+
 -	The first file shows the screenshots for moving the application to the cloud.
+
 -	Second file consist of the outputs. Each code is commented starting with #. 
--	The third file is for the source code. The code can be run on Jupiter and able to see all the sections. The code also described with comments (#).
+
+-	The third file is for the source code. The code can be run on Jupiter and able to see all the sections. 
+  The code also described with comments (#). To use the source code, we need to run it on jupyter, 
+  after open it on jupyter we will be able to run the code section by section. Example output can be seen in output file also on running program. 
